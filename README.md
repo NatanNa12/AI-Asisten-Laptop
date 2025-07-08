@@ -15,7 +15,7 @@ Ini adalah proyek asisten AI pribadi yang dapat dikontrol melalui suara dan teks
 ## Setup & Instalasi
 1.  **Clone repository ini:**
     ```bash
-    git clone [https://github.com/NAMA_ANDA/NAMA_REPO_ANDA.git](https://github.com/NAMA_ANDA/NAMA_REPO_ANDA.git)
+    git clone [https://github.com/NatanNa12/AI-Asisten-Laptop](https://github.com/NatanNa12/AI-Asisten-Laptop)
     cd NAMA_REPO_ANDA
     ```
 2.  **Buat dan aktifkan virtual environment:**
