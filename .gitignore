@@ -1,0 +1,19 @@
+# Virtual Environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# File environment (RAHASIA!)
+.env
+
+# Folder log dan backup
+logs/
+D:/Assistant_Backup/
+
+# File knowledge base
+knowledge_base.json
+
+# File aset screenshot
+assets/
