@@ -1,40 +1,151 @@
-# Asisten AI Pribadi dengan Python & Gemini
+Berikut isi `README.md`-nya dalam satu variabel Python bernama `readme_text`, jadi kamu bisa langsung copy dan simpan ke file:
 
-Ini adalah proyek asisten AI pribadi yang dapat dikontrol melalui suara dan teks, dibangun dengan Python dan ditenagai oleh Google Gemini API. Asisten ini mampu melakukan berbagai tugas, mulai dari menjawab pertanyaan umum hingga mengontrol aplikasi di laptop Anda.
+````python
+readme_text = """
+# 🤖 Asisten AI Pribadi Laptop  
+Asisten cerdas yang hidup di laptopmu – bisa dikontrol lewat suara, teks, dan bahkan melihat layar!
 
-## Fitur Utama
--   **Interaksi Ganda:** Menerima perintah melalui suara (Speech-to-Text) dan ketikan keyboard.
--   **Kontrol Laptop:** Mampu membuka aplikasi, website, dan mengetik secara otomatis.
--   **Otak AI Berbasis Visi:** Menggunakan model multi-modal Gemini untuk menganalisis screenshot layar dan melakukan aksi yang relevan (misalnya, mengklik tombol).
--   **Memori & Pembelajaran:**
-    -   Mengingat lokasi aplikasi yang pernah dibuka untuk akses lebih cepat di masa depan.
-    -   Mengingat riwayat percakapan untuk memberikan respons yang lebih kontekstual.
--   **Sistem Plugin:** Arsitektur modular yang memungkinkan penambahan fitur baru dengan mudah.
--   **Logging & Backup:** Semua percakapan dicatat dalam file CSV dan memiliki skrip untuk backup.
+![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white)
+![OpenAI](https://img.shields.io/badge/Gemini%20API-enabled-yellow?logo=google)
+![SpeechRecognition](https://img.shields.io/badge/Speech--to--Text-Active-brightgreen?logo=voximplant)
+![Automation](https://img.shields.io/badge/Keyboard%2FMouse%20Control-Enabled-purple)
+![License](https://img.shields.io/github/license/NatanNa12/AI-Asisten-Laptop)
 
-## Setup & Instalasi
-1.  **Clone repository ini:**
-    ```bash
-    git clone [https://github.com/NatanNa12/AI-Asisten-Laptop](https://github.com/NatanNa12/AI-Asisten-Laptop)
-    cd NAMA_REPO_ANDA
-    ```
-2.  **Buat dan aktifkan virtual environment:**
-    ```bash
-    python -m venv venv
-    # Windows
-    venv\Scripts\activate
-    # macOS/Linux
-    source venv/bin/activate
-    ```
-3.  **Install semua library yang dibutuhkan:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-4.  **Konfigurasi API Key:**
-    - Salin file `.env.example` menjadi file baru bernama `.env`.
-    - Buka file `.env` dan masukkan API Key Gemini Anda yang valid.
+---
 
-5.  **Jalankan program:**
-    ```bash
-    python main.py
-    ```
+## ✨ Fitur Utama
+🎙️ **Kontrol Suara & Teks**  
+➤ Bisa memahami perintah lewat suara (Speech-to-Text) atau ketikan.
+
+🧠 **Otak AI Multimodal (Vision)**  
+➤ Menganalisis tampilan layar (screenshot) dan mengeksekusi aksi seperti klik tombol, membaca teks, dll. Powered by Google Gemini API.
+
+🖥️ **Kontrol Sistem Laptop**  
+➤ Membuka aplikasi, website, mengetik otomatis, kontrol mouse, dll.
+
+🧩 **Arsitektur Plugin Modular**  
+➤ Tambahkan fitur baru seperti sistem skill.
+
+🧠 **Memori Kontekstual & Lokasi App**  
+➤ Mengingat history percakapan dan lokasi app untuk mempercepat akses.
+
+📦 **Backup & Logging Otomatis**  
+➤ Percakapan disimpan ke CSV dan didukung sistem backup.
+
+---
+
+## 🛠️ Teknologi yang Digunakan
+
+| Komponen | Deskripsi |
+|---------|-----------|
+| 🐍 **Python** | Bahasa utama (versi 3.9+) |
+| 🧠 **Gemini API** | Model AI multimodal dari Google |
+| 🗣️ **SpeechRecognition + PyAudio** | Untuk input suara |
+| 💬 **pyttsx3** | Text-to-speech lokal |
+| 🖱️ **pyautogui** | Kontrol mouse dan keyboard |
+| 📷 **PIL / mss** | Tangkap layar |
+| 🔐 **dotenv** | Keamanan API key |
+| 📦 **Custom Plugin Loader** | Untuk modul ekstensi |
+
+---
+
+## ⚙️ Instalasi & Setup
+
+1. **Clone repository ini**
+```bash
+git clone https://github.com/NatanNa12/AI-Asisten-Laptop.git
+cd AI-Asisten-Laptop
+````
+
+2. **Buat virtual environment**
+
+```bash
+python -m venv venv
+# Aktifkan (Windows)
+venv\\Scripts\\activate
+# Aktifkan (Linux/macOS)
+source venv/bin/activate
+```
+
+3. **Install semua dependencies**
+
+```bash
+pip install -r requirements.txt
+```
+
+4. **Atur API Key Gemini**
+
+* Duplikat file `.env.example` jadi `.env`
+* Isi dengan API Key milikmu dari Google AI Studio
+
+5. **Jalankan aplikasi**
+
+```bash
+python main.py
+```
+
+---
+
+## 🔄 Jalankan Otomatis Saat Startup (Windows)
+
+> Untuk menjalankan AI ini saat laptop dinyalakan:
+
+1. Buat file `start_ai.bat`:
+
+```bat
+@echo off
+cd /d D:\\Path\\ke\\AI-Asisten-Laptop
+call venv\\Scripts\\activate
+python main.py
+```
+
+2. Buka **Task Scheduler** → *Create Task*
+
+   * Tab **General**: Centang *Run with highest privileges*
+   * Tab **Triggers**: *At startup*
+   * Tab **Actions**: *Start a program* ➜ arahkan ke `start_ai.bat`
+
+---
+
+## 📁 Struktur Folder
+
+```
+AI-Asisten-Laptop/
+├── main.py
+├── plugins/
+│   ├── kalkulator.py
+│   └── ...
+├── memory/
+│   ├── history.csv
+├── utils/
+│   ├── vision.py
+│   └── speech.py
+├── .env.example
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## 💬 Kontribusi
+
+Punya ide fitur baru? Bikin plugin baru? Pull request sangat terbuka! 💡
+Silakan fork repo ini dan kirimkan kontribusimu.
+
+---
+
+## 📝 Lisensi
+
+Proyek ini berlisensi MIT
+"""
+
+````
+
+Kalau kamu mau simpan langsung ke `README.md`, kamu bisa pakai Python juga:
+
+```python
+with open("README.md", "w", encoding="utf-8") as f:
+    f.write(readme_text)
+````
+
+Mau sekalian aku bantu buatkan `.bat` dan `.sh` file-nya juga? 😄
