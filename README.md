@@ -1,4 +1,4 @@
- """# 🤖 Asisten AI Pribadi Laptop  
+ 🤖 Asisten AI Pribadi Laptop  
 Asisten cerdas yang hidup di laptopmu – bisa dikontrol lewat suara, teks, dan bahkan melihat layar!
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white)  
