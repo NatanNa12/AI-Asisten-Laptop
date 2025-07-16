@@ -4,11 +4,12 @@ import subprocess
 import webbrowser
 import pyautogui
 import time
-from core.gemini_client import get_vision_response
-from PIL import Image
+import json # Pastikan import ini ada
+from .knowledge import get_app_path, set_app_path # Menggunakan . untuk relative import
+from .database import load_recent_history # Menggunakan . untuk relative import
+from .gemini_client import get_vision_response # Menggunakan . untuk relative import
 
-from core.knowledge import get_app_path, set_app_path # Tambahkan import ini
-from core.database import load_recent_history
+
 
 def find_and_open_app(app_name: str) -> str:
     """Mencari dan membuka aplikasi menggunakan knowledge base."""
@@ -49,80 +50,93 @@ def find_and_open_app(app_name: str) -> str:
 
 def execute_vision_command(command: str) -> str:
     """
-    Otak utama AI. Kini dengan memori percakapan.
+    Otak utama AI. Menerjemahkan perintah bahasa natural menjadi skrip aksi bot.
     """
     try:
         screenshot = pyautogui.screenshot()
-        # Ambil 10 percakapan terakhir sebagai memori
-        conversation_history = load_recent_history(limit=10)
+        conversation_history = load_recent_history(limit=5)
 
+        # --- PROMPT NLU YANG SANGAT DETAIL ---
         system_prompt = """
-        Anda adalah AI asisten super yang cerdas, ramah, dan memiliki memori. Anda mengontrol penuh komputer Windows.
-        Misi Anda adalah memahami niat pengguna dan mengubahnya menjadi satu aksi komputer yang paling tepat.
-
-        PERATURAN PENTING:
-        1.  Gunakan "RIWAYAT PERCAKAPAN" untuk memahami konteks. Jika pengguna berkata "lanjutkan", lihat apa yang sedang dibicarakan. Jika pengguna bercerita, berikan respons yang relevan dan empatik.
-        2.  Pahami Niat Pengguna: "Buka" -> `OPEN_APP`, "Cari" -> `SEARCH_WEB`, "Ketik" -> `TYPE`, "Klik" -> `CLICK`.
-        3.  Sapaan & Percakapan: Jika pengguna hanya menyapa atau bercerita, balas menggunakan `ANSWER_TEXT`. Jangan melakukan aksi komputer jika tidak diminta secara eksplisit.
-
-        Gunakan HANYA salah satu format respons berikut:
-        - OPEN_APP(nama_aplikasi)
-        - CLICK(x, y)
-        - TYPE(teks)
-        - KEY_PRESS(tombol)
-        - SEARCH_WEB(topik)
-        - ANSWER_TEXT(jawaban_teks_Anda)
-        - DONE()
-
-        ---
-        RIWAYAT PERCAKapan TERAKHIR (untuk konteks):
+        Anda adalah Master AI Automation yang menerjemahkan bahasa manusia menjadi daftar perintah pyautogui yang presisi.
+        
+        PERATURAN UTAMA:
+        1.  Analisis perintah pengguna dan gambar layar untuk memahami niat dan konteks.
+        2.  Uraikan perintah tersebut menjadi serangkaian aksi mouse dan keyboard yang logis.
+        3.  Respons HANYA dengan sebuah list Python dalam format string JSON. Setiap item dalam list adalah sebuah string aksi.
+        
+        FORMAT AKSI YANG TERSEDIA:
+        - "OPEN_APP(nama_aplikasi)" // Untuk membuka spotify, chrome, notepad, dll.
+        - "CLICK(x, y)" // Untuk mengklik mouse.
+        - "TYPE(teks)" // Untuk mengetik teks.
+        - "KEY_DOWN(tombol)"  // Untuk menahan tombol (contoh: 'shift').
+        - "KEY_UP(tombol)"    // Untuk melepas tombol.
+        - "PRESS(tombol)"     // Untuk menekan cepat (contoh: 'enter', 'f5').
+        - "SLEEP(detik)"      // Untuk jeda, penting setelah klik atau buka app.
+        - "SCROLL(jumlah, arah)" // jumlah adalah pixel, arah adalah 'up' atau 'down'.
+        - "ANSWER_TEXT(jawaban)" // HANYA untuk menjawab pertanyaan atau sapaan.
+        
+        CONTOH TERJEMAHAN:
+        - Perintah: "cari milhiya di youtube" -> (Melihat layar ada Youtube) -> Respons: ["CLICK(x, y_search_bar)", "TYPE(milhiya)", "PRESS(enter)"]
+        - Perintah: "tekan library di spotify" -> (Melihat layar ada Spotify) -> Respons: ["CLICK(x, y_tombol_library)"]
+        - Perintah: "cari dan putar lagu 5:20 am" -> Respons: ["OPEN_APP(spotify)", "SLEEP(3)", "CLICK(x, y_search_spotify)", "TYPE(5:20 am)", "SLEEP(1)", "PRESS(enter)", "SLEEP(2)", "CLICK(x, y_hasil_pertama)"]
+        
+        RIWAYAT PERCAKAPAN:
         {conversation_history}
         ---
-
-        Konteks Saat Ini:
-        - Perintah Pengguna: '{command}'
+        Perintah Pengguna Saat Ini: '{command}'
+        ---
+        Sekarang, berikan daftar aksi dalam format string JSON:
         """
         
-        print("⚙️  Menganalisis layar dan memori percakapan...")
-        # Kirim prompt yang sudah diformat dengan riwayat dan perintah
+        print("⚙️ Menerjemahkan perintah menjadi skrip aksi...")
         full_prompt = system_prompt.format(conversation_history=conversation_history, command=command)
-        response_action = get_vision_response([full_prompt, screenshot])
-        print(f"🤖 Aksi yang disarankan AI: {response_action}")
+        response_text = get_vision_response([full_prompt, screenshot])
+        print(f"🤖 Skrip aksi dari AI: {response_text}")
         
-        action = response_action.strip()
+        cleaned_response = response_text.strip().replace('`', '')
+        if cleaned_response.startswith("json"):
+            cleaned_response = cleaned_response[4:].strip()
+            
+        action_list = json.loads(cleaned_response)
         
-        # (Sisa kode parsing di bawah ini tidak perlu diubah, biarkan seperti adanya)
-        # ... (salin-tempel sisa fungsi dari versi sebelumnya) ...
-        if action.startswith("CLICK"):
-            coords_str = action[action.find("(")+1:action.find(")")].split(',')
-            x, y = int(coords_str[0]), int(coords_str[1])
-            pyautogui.click(x, y)
-            return f"Melakukan klik di {x}, {y}."
-        elif action.startswith("TYPE"):
-            text_to_type = action[action.find("(")+1:action.find(")")]
-            pyautogui.write(text_to_type, interval=0.05)
-            return f"Mengetik: {text_to_type}."
-        elif action.startswith("KEY_PRESS"):
-            key = action[action.find("(")+1:action.find(")")].replace("'", "").strip()
-            pyautogui.press(key.split('+'))
-            return f"Menekan tombol '{key}'."
-        elif action.startswith("OPEN_APP"):
-            app_name = action[action.find("(")+1:action.find(")")]
-            return find_and_open_app(app_name)
-        elif action.startswith("SEARCH_WEB"):
-            query = action[action.find("(")+1:action.find(")")]
-            webbrowser.open(f'https://www.google.com/search?q={query}')
-            return f"Mencari '{query}' di web."
-        elif action.startswith("ANSWER_TEXT"):
-            answer = action[action.find("(")+1:action.find(")")]
-            return answer
-        elif action.startswith("DONE"):
-            return "Tugas selesai."
-        else:
-            return action
+        for action_str in action_list:
+            print(f"   -> Mengeksekusi: {action_str}")
+            # ... (Sisa kode parsing dan eksekusi pyautogui di sini sama persis dengan sebelumnya) ...
+            if action_str.startswith("CLICK"):
+                params = action_str[action_str.find("(")+1:action_str.find(")")].split(',')
+                pyautogui.click(int(params[0]), int(params[1]))
+            elif action_str.startswith("DOUBLE_CLICK"):
+                params = action_str[action_str.find("(")+1:action_str.find(")")].split(',')
+                pyautogui.doubleClick(int(params[0]), int(params[1]))
+            elif action_str.startswith("TYPE"):
+                param = action_str[action_str.find("(")+1:action_str.find(")")]
+                pyautogui.write(param, interval=0.05)
+            elif action_str.startswith("KEY_DOWN"):
+                param = action_str[action_str.find("(")+1:action_str.find(")")]
+                pyautogui.keyDown(param)
+            elif action_str.startswith("KEY_UP"):
+                param = action_str[action_str.find("(")+1:action_str.find(")")]
+                pyautogui.keyUp(param)
+            elif action_str.startswith("PRESS"):
+                param = action_str[action_str.find("(")+1:action_str.find(")")].replace("'", "").strip()
+                pyautogui.press(param.split('+'))
+            elif action_str.startswith("SLEEP"):
+                param = action_str[action_str.find("(")+1:action_str.find(")")]
+                time.sleep(float(param))
+            elif action_str.startswith("SCROLL"):
+                params = action_str[action_str.find("(")+1:action_str.find(")")].split(',')
+                amount = int(params[0])
+                direction = params[1].strip()
+                pyautogui.scroll(amount if direction == 'up' else -amount)
+            elif action_str.startswith("OPEN_APP"):
+                param = action_str[action_str.find("(")+1:action_str.find(")")]
+                find_and_open_app(param) # find_and_open_app masih kita butuhkan
+            elif action_str.startswith("ANSWER_TEXT"):
+                param = action_str[action_str.find("(")+1:action_str.find(")")]
+                return param
 
+        return "Skrip aksi telah selesai dieksekusi."
 
     except Exception as e:
-        return f"Terjadi error pada mode visi: {e}"
-    
-    
+        return f"Terjadi error dalam eksekusi skrip: {e}"
