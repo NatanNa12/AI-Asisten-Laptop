@@ -1,34 +1,45 @@
-# core/voice_output.py
+# core/voice_input.py
+# check_voices.py (Versi Upgrade)
 import win32com.client
 
-speaker = None
 try:
-    print("⚙️  Menginisialisasi komponen Windows SAPI5...")
     speaker = win32com.client.Dispatch("SAPI.SpVoice")
-    
-    # Mencari suara wanita yang tersedia
-    found_female_voice = False
-    for voice in speaker.GetVoices():
-        if "zira" in voice.GetDescription().lower() or "female" in voice.GetDescription().lower():
-            speaker.Voice = voice
-            print(f"✅ Suara diatur ke: {voice.GetDescription()}")
-            found_female_voice = True
-            break
-    
-    if not found_female_voice:
-        print("⚠️ Tidak ditemukan suara wanita spesifik, menggunakan suara default.")
-
+    voices = speaker.GetVoices()
+    print("Suara yang tersedia di sistem Anda:")
+    for i, voice in enumerate(voices):
+        # 411 adalah kode untuk bahasa Indonesia, 409 untuk US English
+        lang_id = voice.Language
+        print(f"{i+1}. Nama: {voice.GetDescription()}, Language ID: {lang_id}")
 except Exception as e:
-    print(f"❌ PERINGATAN: Gagal menginisialisasi komponen SAPI5. Asisten akan berjalan tanpa suara.")
-    print(f"   Detail Error: {e}")
+    print(f"Gagal mendapatkan daftar suara: {e}")
 
-
-def speak(text: str):
+def listen_for_command() -> str | None:
     """
-    Mengubah teks menjadi suara menggunakan Windows SAPI5 COM object.
+    Mendengarkan satu kali input dari mikrofon dan mengembalikannya sebagai teks.
+    Fungsi ini dibuat "senyap" untuk tidak mengganggu terminal.
     """
-    if speaker:
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        # Mengatur sensitivitas terhadap kebisingan
+        recognizer.adjust_for_ambient_noise(source, duration=0.5)
+        recognizer.pause_threshold = 1
+        
         try:
-            speaker.Speak(text)
-        except Exception as e:
-            print(f"❌ Error saat menggunakan SAPI5: {e}")
+            # Merekam audio dari mikrofon
+            audio = recognizer.listen(source, timeout=5, phrase_time_limit=15)
+            
+            # Hanya print saat suara mulai diproses
+            print("⚙️  Mengenali suara...") 
+            command = recognizer.recognize_google(audio, language='id-ID')
+            print(f"✅ Suara dikenali: {command}")
+            return command.lower()
+            
+        except sr.UnknownValueError:
+            # Jika suara tidak jelas, kembalikan None tanpa pesan error
+            return None
+        except sr.RequestError:
+            print("🔌 Masalah koneksi untuk pengenalan suara.")
+            return None
+        except Exception:
+            # Untuk error lainnya
+            return None
